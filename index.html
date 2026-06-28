@@ -114,16 +114,29 @@
         </div>
 
         <div class="cronograma-wrapper" id="wrapper">
-            <div class="cronograma-canvas" id="canvas">
-                <!-- Resizers interativos -->
-                <div class="resizer-v" id="resizer-v" title="Arraste para ajustar a largura da coluna de tarefas"></div>
-                <div class="resizer-h" id="resizer-h" title="Arraste para ajustar a altura da régua de datas"></div>
-                
-                <div class="q-top-left"><div class="q-top-left-img" id="img-top-left"></div></div>
-                <div class="q-timeline"><div class="q-timeline-img" id="img-timeline"></div></div>
-                <div class="q-sidebar"><div class="q-sidebar-img" id="img-sidebar"></div></div>
-                <div class="q-gantt-core" id="img-gantt-core"></div>
+            <!-- Caixa 1: Top-Left (Fixo) -->
+            <div class="box-top-left" id="box-top-left">
+                <img class="gantt-img" id="img-top-left" src="" alt="">
             </div>
+            
+            <!-- Caixa 2: Timeline (Sincroniza horizontalmente) -->
+            <div class="box-timeline" id="box-timeline">
+                <img class="gantt-img" id="img-timeline" src="" alt="">
+            </div>
+            
+            <!-- Caixa 3: Sidebar (Sincroniza verticalmente) -->
+            <div class="box-sidebar" id="box-sidebar">
+                <img class="gantt-img" id="img-sidebar" src="" alt="">
+            </div>
+            
+            <!-- Caixa 4: Gantt Core (Rolador principal) -->
+            <div class="box-gantt-core" id="box-gantt-core">
+                <img class="gantt-img" id="img-gantt-core" src="" alt="">
+            </div>
+
+            <!-- Resizers interativos -->
+            <div class="resizer-v" id="resizer-v" title="Arraste para ajustar a largura da coluna de tarefas"></div>
+            <div class="resizer-h" id="resizer-h" title="Arraste para ajustar a altura da régua de datas"></div>
         </div>
     </div>
 </div>
@@ -138,15 +151,17 @@
     const selectedFileSize = document.getElementById('selected-file-size');
     const btnProcessar = document.getElementById('btn-processar');
     const wrapper = document.getElementById('wrapper');
+    const boxGanttCore = document.getElementById('box-gantt-core');
+    const boxTimeline = document.getElementById('box-timeline');
+    const boxSidebar = document.getElementById('box-sidebar');
     
     let originalDimensoes = null;
     let currentZoom = 1.0;
 
-    // Sincronização de Scroll com as Custom Properties do CSS
-    wrapper.addEventListener('scroll', () => {
-        const root = document.documentElement;
-        root.style.setProperty('--scroll-x', wrapper.scrollLeft + 'px');
-        root.style.setProperty('--scroll-y', wrapper.scrollTop + 'px');
+    // Sincronização de Scroll entre as Caixas
+    boxGanttCore.addEventListener('scroll', () => {
+        boxTimeline.scrollLeft = boxGanttCore.scrollLeft;
+        boxSidebar.scrollTop = boxGanttCore.scrollTop;
     });
 
     // Gerenciamento de Resizing dos divisores
@@ -334,20 +349,17 @@
                 
                 document.getElementById('active-filename').textContent = file.name;
                 
-                // Definir a imagem única recebida em Base64 diretamente nos elementos
-                const bgUrl = `url("${data.full_image}")`;
-                document.getElementById('img-top-left').style.backgroundImage = bgUrl;
-                document.getElementById('img-timeline').style.backgroundImage = bgUrl;
-                document.getElementById('img-sidebar').style.backgroundImage = bgUrl;
-                document.getElementById('img-gantt-core').style.backgroundImage = bgUrl;
-                
-                const root = document.documentElement;
+                // Definir a imagem única nos elementos img
+                document.getElementById('img-top-left').src = data.full_image;
+                document.getElementById('img-timeline').src = data.full_image;
+                document.getElementById('img-sidebar').src = data.full_image;
+                document.getElementById('img-gantt-core').src = data.full_image;
                 
                 // Resetar scroll do visualizador
-                wrapper.scrollLeft = 0;
-                wrapper.scrollTop = 0;
-                root.style.setProperty('--scroll-x', '0px');
-                root.style.setProperty('--scroll-y', '0px');
+                boxGanttCore.scrollLeft = 0;
+                boxGanttCore.scrollTop = 0;
+                boxTimeline.scrollLeft = 0;
+                boxSidebar.scrollTop = 0;
                 
                 // Aplicar as dimensões nos estilos CSS
                 applyZoom(currentZoom);

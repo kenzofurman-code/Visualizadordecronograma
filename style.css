@@ -451,25 +451,9 @@ body {
     border-radius: 10px;
 }
 
-.cronograma-wrapper::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border: 3px solid rgba(8, 11, 17, 0.5);
-    border-radius: 10px;
-}
-
-.cronograma-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--border-hover);
-}
-
-.cronograma-canvas {
-    position: relative;
-    width: var(--canvas-width);
-    height: var(--canvas-height);
-}
-
 /* Resizers interativos */
 .resizer-v {
-    position: sticky;
+    position: absolute;
     left: calc(var(--col-width) - 3px);
     top: 0;
     width: 6px;
@@ -497,7 +481,7 @@ body {
 }
 
 .resizer-h {
-    position: sticky;
+    position: absolute;
     top: calc(var(--row-height) - 3px);
     left: 0;
     height: 6px;
@@ -531,84 +515,112 @@ body.resizing-h, body.resizing-h * {
     cursor: row-resize !important;
 }
 
-/* Quadrante Superior Esquerdo - Sticky Total */
-.q-top-left {
-    position: sticky;
+/* Configuração do Wrapper do visualizador */
+.cronograma-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 220px);
+    min-height: 500px;
+    overflow: hidden; /* O visualizador externo não rola mais, rola apenas a gantt-core */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: #111520;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Caixa 1: Top-Left (Fixo) */
+.box-top-left {
+    position: absolute;
     top: 0;
     left: 0;
     width: var(--col-width);
     height: var(--row-height);
     z-index: 50;
+    overflow: hidden;
+    background-color: #111520;
     border-right: 2px solid #000;
     border-bottom: 2px solid #000;
-    background-color: #111520;
     box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
 }
 
-.q-top-left-img {
-    width: 100%;
-    height: 100%;
-    background-repeat: no-repeat;
-    background-size: var(--canvas-width) var(--canvas-height);
-    background-position: 0px 0px;
-}
-
-/* Linha do Tempo (Cabeçalho de Datas) - Sticky Top */
-.q-timeline {
-    position: sticky;
+/* Caixa 2: Timeline (Sincroniza horizontalmente) */
+.box-timeline {
+    position: absolute;
     top: 0;
     left: var(--col-width);
     width: calc(100% - var(--col-width));
     height: var(--row-height);
     z-index: 30;
     overflow: hidden;
-    border-bottom: 2px solid #000;
     background-color: #111520;
+    border-bottom: 2px solid #000;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-.q-timeline-img {
-    height: 100%;
-    width: calc(var(--canvas-width) - var(--col-width));
-    background-repeat: no-repeat;
-    background-size: var(--canvas-width) var(--canvas-height);
-    background-position: calc(-1 * (var(--col-width) + var(--scroll-x))) 0px;
-}
-
-/* Barra Lateral (Lista de Tarefas) - Sticky Left */
-.q-sidebar {
-    position: sticky;
-    left: 0;
+/* Caixa 3: Sidebar (Sincroniza verticalmente) */
+.box-sidebar {
+    position: absolute;
     top: var(--row-height);
+    left: 0;
     width: var(--col-width);
     height: calc(100% - var(--row-height));
     z-index: 40;
-    border-right: 2px solid #000;
-    background-color: #111520;
-    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
     overflow: hidden;
+    background-color: #111520;
+    border-right: 2px solid #000;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
 }
 
-.q-sidebar-img {
-    width: 100%;
-    height: 100%;
-    background-repeat: no-repeat;
-    background-size: var(--canvas-width) var(--canvas-height);
-    background-position: 0px calc(-1 * (var(--row-height) + var(--scroll-y)));
-}
-
-/* Miolo do Gantt (Gráficos) - Fundo */
-.q-gantt-core {
+/* Caixa 4: Gantt Core (Rolador principal) */
+.box-gantt-core {
     position: absolute;
     top: var(--row-height);
     left: var(--col-width);
-    width: calc(var(--canvas-width) - var(--col-width));
-    height: calc(var(--canvas-height) - var(--row-height));
+    width: calc(100% - var(--col-width));
+    height: calc(100% - var(--row-height));
     z-index: 10;
-    background-repeat: no-repeat;
-    background-size: var(--canvas-width) var(--canvas-height);
-    background-position: calc(-1 * var(--col-width)) calc(-1 * var(--row-height));
+    overflow: auto; /* Permite rolagem nos eixos X e Y */
+    background-color: #111520;
+}
+
+/* Customização da Barra de Rolagem da box-gantt-core */
+.box-gantt-core::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+.box-gantt-core::-webkit-scrollbar-track {
+    background: rgba(8, 11, 17, 0.5);
+    border-radius: 10px;
+}
+.box-gantt-core::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border: 3px solid rgba(8, 11, 17, 0.5);
+    border-radius: 10px;
+}
+.box-gantt-core::-webkit-scrollbar-thumb:hover {
+    background: var(--border-hover);
+}
+
+/* Imagens do Gantt */
+.gantt-img {
+    width: var(--canvas-width);
+    height: var(--canvas-height);
+    display: block;
+    max-width: none !important;
+}
+
+/* Margens de deslocamento interno para simular recortes */
+#img-timeline {
+    margin-left: calc(-1 * var(--col-width));
+}
+
+#img-sidebar {
+    margin-top: calc(-1 * var(--row-height));
+}
+
+#img-gantt-core {
+    margin-left: calc(-1 * var(--col-width));
+    margin-top: calc(-1 * var(--row-height));
 }
 
 /* Notificações Toast */
