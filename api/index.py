@@ -35,8 +35,9 @@ async def upload_cronograma(file: UploadFile = File(...)):
         zoom = 300 / 72  # Alta definição (300 DPI)
         pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
         
-        # Converter Pixmap do PyMuPDF diretamente em uma imagem PIL (em memória)
-        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        # Converter Pixmap do PyMuPDF em imagem PIL usando PNG em memória
+        img_bytes = pix.tobytes("png")
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         largura, altura = img.size
         
         # Algoritmo de Varredura para achar o fim da lista de tarefas (X)
