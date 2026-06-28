@@ -334,9 +334,14 @@
                 
                 document.getElementById('active-filename').textContent = file.name;
                 
-                // Definir a imagem única recebida em Base64 na variável CSS
+                // Definir a imagem única recebida em Base64 diretamente nos elementos
+                const bgUrl = `url("${data.full_image}")`;
+                document.getElementById('img-top-left').style.backgroundImage = bgUrl;
+                document.getElementById('img-timeline').style.backgroundImage = bgUrl;
+                document.getElementById('img-sidebar').style.backgroundImage = bgUrl;
+                document.getElementById('img-gantt-core').style.backgroundImage = bgUrl;
+                
                 const root = document.documentElement;
-                root.style.setProperty('--full-image', `url(${data.full_image})`);
                 
                 // Resetar scroll do visualizador
                 wrapper.scrollLeft = 0;

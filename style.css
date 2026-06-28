@@ -539,7 +539,6 @@ body.resizing-h, body.resizing-h * {
     width: var(--col-width);
     height: var(--row-height);
     z-index: 50;
-    background-image: var(--full-image);
     background-repeat: no-repeat;
     background-size: var(--canvas-width) var(--canvas-height);
     background-position: 0px 0px;
@@ -566,7 +565,6 @@ body.resizing-h, body.resizing-h * {
 .q-timeline-img {
     height: 100%;
     width: calc(var(--canvas-width) - var(--col-width));
-    background-image: var(--full-image);
     background-repeat: no-repeat;
     background-size: var(--canvas-width) var(--canvas-height);
     background-position: calc(-1 * (var(--col-width) + var(--scroll-x))) 0px;
@@ -589,7 +587,6 @@ body.resizing-h, body.resizing-h * {
 .q-sidebar-img {
     width: 100%;
     height: calc(var(--canvas-height) - var(--row-height));
-    background-image: var(--full-image);
     background-repeat: no-repeat;
     background-size: var(--canvas-width) var(--canvas-height);
     background-position: 0px calc(-1 * (var(--row-height) + var(--scroll-y)));
@@ -603,7 +600,6 @@ body.resizing-h, body.resizing-h * {
     width: calc(var(--canvas-width) - var(--col-width));
     height: calc(var(--canvas-height) - var(--row-height));
     z-index: 10;
-    background-image: var(--full-image);
     background-repeat: no-repeat;
     background-size: var(--canvas-width) var(--canvas-height);
     background-position: calc(-1 * var(--col-width)) calc(-1 * var(--row-height));
