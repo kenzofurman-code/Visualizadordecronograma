@@ -5,6 +5,11 @@
     --canvas-width: 2000px;
     --canvas-height: 2000px;
     
+    /* Variáveis do visualizador dinâmico */
+    --full-image: none;
+    --scroll-x: 0px;
+    --scroll-y: 0px;
+    
     /* Paleta de Cores - Deep Space Theme */
     --bg-main: #0B0F19;
     --bg-card: #161B26;
@@ -462,6 +467,70 @@ body {
     height: var(--canvas-height);
 }
 
+/* Resizers interativos */
+.resizer-v {
+    position: sticky;
+    left: calc(var(--col-width) - 3px);
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 100;
+    background: transparent;
+    transition: background-color 0.2s;
+}
+.resizer-v::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2px;
+    width: 2px;
+    height: 100%;
+    background-color: var(--border-color);
+    transition: background-color 0.2s, width 0.2s, left 0.2s;
+}
+.resizer-v:hover::after, .resizer-v.dragging::after {
+    background-color: var(--accent);
+    width: 4px;
+    left: 1px;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.resizer-h {
+    position: sticky;
+    top: calc(var(--row-height) - 3px);
+    left: 0;
+    height: 6px;
+    width: 100%;
+    cursor: row-resize;
+    z-index: 100;
+    background: transparent;
+    transition: background-color 0.2s;
+}
+.resizer-h::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 2px;
+    height: 2px;
+    width: 100%;
+    background-color: var(--border-color);
+    transition: background-color 0.2s, height 0.2s, top 0.2s;
+}
+.resizer-h:hover::after, .resizer-h.dragging::after {
+    background-color: var(--accent);
+    height: 4px;
+    top: 1px;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+body.resizing-v, body.resizing-v * {
+    cursor: col-resize !important;
+}
+body.resizing-h, body.resizing-h * {
+    cursor: row-resize !important;
+}
+
 /* Quadrante Superior Esquerdo - Sticky Total */
 .q-top-left {
     position: sticky;
@@ -470,8 +539,10 @@ body {
     width: var(--col-width);
     height: var(--row-height);
     z-index: 50;
+    background-image: var(--full-image);
     background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-size: var(--canvas-width) var(--canvas-height);
+    background-position: 0px 0px;
     border-right: 2px solid #000;
     border-bottom: 2px solid #000;
     background-color: #111520;
@@ -495,8 +566,10 @@ body {
 .q-timeline-img {
     height: 100%;
     width: calc(var(--canvas-width) - var(--col-width));
+    background-image: var(--full-image);
     background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-size: var(--canvas-width) var(--canvas-height);
+    background-position: calc(-1 * (var(--col-width) + var(--scroll-x))) 0px;
 }
 
 /* Barra Lateral (Lista de Tarefas) - Sticky Left */
@@ -510,13 +583,16 @@ body {
     border-right: 2px solid #000;
     background-color: #111520;
     box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
 }
 
 .q-sidebar-img {
     width: 100%;
     height: calc(var(--canvas-height) - var(--row-height));
+    background-image: var(--full-image);
     background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-size: var(--canvas-width) var(--canvas-height);
+    background-position: 0px calc(-1 * (var(--row-height) + var(--scroll-y)));
 }
 
 /* Miolo do Gantt (Gráficos) - Fundo */
@@ -527,8 +603,10 @@ body {
     width: calc(var(--canvas-width) - var(--col-width));
     height: calc(var(--canvas-height) - var(--row-height));
     z-index: 10;
+    background-image: var(--full-image);
     background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-size: var(--canvas-width) var(--canvas-height);
+    background-position: calc(-1 * var(--col-width)) calc(-1 * var(--row-height));
 }
 
 /* Notificações Toast */

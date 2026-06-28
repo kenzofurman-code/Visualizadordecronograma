@@ -73,24 +73,12 @@ async def upload_cronograma(file: UploadFile = File(...)):
         
         print(f"[DEBUG] Dimensões do PDF: {largura}x{altura} | x_cut: {x_cut} | y_cut: {y_cut}")
         
-        quadrantes = {
-            "top_left": (0, 0, x_cut, y_cut),
-            "timeline": (x_cut, 0, largura, y_cut),
-            "sidebar": (0, y_cut, x_cut, altura),
-            "gantt_core": (x_cut, y_cut, largura, altura)
-        }
+        # Salvar a imagem inteira do PDF em buffer na memória e codificar em Base64
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG", optimize=True)
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        full_image_url = f"data:image/png;base64,{img_str}"
         
-        urls = {}
-        for nome, box in quadrantes.items():
-            cropped = img.crop(box)
-            
-            # Salvar imagem em buffer na memória e codificar em Base64
-            buffered = io.BytesIO()
-            cropped.save(buffered, format="PNG", optimize=True)
-            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-            
-            urls[nome] = f"data:image/png;base64,{img_str}"
-            
         doc.close()
         
         return JSONResponse(content={
@@ -101,7 +89,7 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 "x_cut": x_cut,
                 "y_cut": y_cut
             },
-            "urls": urls
+            "full_image": full_image_url
         })
         
     except Exception as e:

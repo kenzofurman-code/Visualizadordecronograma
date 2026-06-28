@@ -115,6 +115,10 @@
 
         <div class="cronograma-wrapper" id="wrapper">
             <div class="cronograma-canvas" id="canvas">
+                <!-- Resizers interativos -->
+                <div class="resizer-v" id="resizer-v" title="Arraste para ajustar a largura da coluna de tarefas"></div>
+                <div class="resizer-h" id="resizer-h" title="Arraste para ajustar a altura da régua de datas"></div>
+                
                 <div class="q-top-left" id="img-top-left"></div>
                 <div class="q-timeline"><div class="q-timeline-img" id="img-timeline"></div></div>
                 <div class="q-sidebar"><div class="q-sidebar-img" id="img-sidebar"></div></div>
@@ -133,11 +137,99 @@
     const selectedFileName = document.getElementById('selected-file-name');
     const selectedFileSize = document.getElementById('selected-file-size');
     const btnProcessar = document.getElementById('btn-processar');
+    const wrapper = document.getElementById('wrapper');
     
     let originalDimensoes = null;
     let currentZoom = 1.0;
 
-    // Gerenciador de eventos do Drag & Drop
+    // Sincronização de Scroll com as Custom Properties do CSS
+    wrapper.addEventListener('scroll', () => {
+        const root = document.documentElement;
+        root.style.setProperty('--scroll-x', wrapper.scrollLeft + 'px');
+        root.style.setProperty('--scroll-y', wrapper.scrollTop + 'px');
+    });
+
+    // Gerenciamento de Resizing dos divisores
+    const resizerV = document.getElementById('resizer-v');
+    const resizerH = document.getElementById('resizer-h');
+    
+    let isDraggingV = false;
+    let isDraggingH = false;
+    
+    // Mouse Events
+    resizerV.addEventListener('mousedown', (e) => {
+        isDraggingV = true;
+        document.body.classList.add('resizing-v');
+        resizerV.classList.add('dragging');
+        e.preventDefault();
+    });
+    
+    resizerH.addEventListener('mousedown', (e) => {
+        isDraggingH = true;
+        document.body.classList.add('resizing-h');
+        resizerH.classList.add('dragging');
+        e.preventDefault();
+    });
+    
+    // Touch Events
+    resizerV.addEventListener('touchstart', (e) => {
+        isDraggingV = true;
+        resizerV.classList.add('dragging');
+        e.preventDefault();
+    }, { passive: false });
+    
+    resizerH.addEventListener('touchstart', (e) => {
+        isDraggingH = true;
+        resizerH.classList.add('dragging');
+        e.preventDefault();
+    }, { passive: false });
+
+    // Global drag handling (mouse and touch)
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+            handleDragMove(e.touches[0]);
+        }
+    }, { passive: false });
+
+    function handleDragMove(e) {
+        if (!originalDimensoes) return;
+        const rect = wrapper.getBoundingClientRect();
+        
+        if (isDraggingV) {
+            let newX = e.clientX - rect.left;
+            // Limitar a largura do divisor entre 50px e 800px em termos de pixels da tela
+            newX = Math.max(50, Math.min(newX, 800));
+            // Dividir pelo zoom para obter o valor original sem zoom correspondente
+            const unscaledX = newX / currentZoom;
+            originalDimensoes.x_cut = unscaledX;
+            applyZoom(currentZoom);
+        }
+        
+        if (isDraggingH) {
+            let newY = e.clientY - rect.top;
+            // Limitar a altura do divisor entre 30px e 400px em termos de pixels da tela
+            newY = Math.max(30, Math.min(newY, 400));
+            const unscaledY = newY / currentZoom;
+            originalDimensoes.y_cut = unscaledY;
+            applyZoom(currentZoom);
+        }
+    }
+    
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+
+    function endDrag() {
+        if (isDraggingV || isDraggingH) {
+            isDraggingV = false;
+            isDraggingH = false;
+            document.body.classList.remove('resizing-v', 'resizing-h');
+            resizerV.classList.remove('dragging');
+            resizerH.classList.remove('dragging');
+        }
+    }
+
+    // Gerenciador de eventos do Drag & Drop de arquivos
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -224,7 +316,6 @@
         document.getElementById('loading-card').style.display = 'flex';
 
         try {
-            // Requisição com caminho relativo para funcionar em qualquer plataforma (ex: Vercel)
             const response = await fetch('/api/upload-cronograma', {
                 method: 'POST',
                 body: formData
@@ -243,15 +334,19 @@
                 
                 document.getElementById('active-filename').textContent = file.name;
                 
+                // Definir a imagem única recebida em Base64 na variável CSS
+                const root = document.documentElement;
+                root.style.setProperty('--full-image', `url(${data.full_image})`);
+                
+                // Resetar scroll do visualizador
+                wrapper.scrollLeft = 0;
+                wrapper.scrollTop = 0;
+                root.style.setProperty('--scroll-x', '0px');
+                root.style.setProperty('--scroll-y', '0px');
+                
                 // Aplicar as dimensões nos estilos CSS
                 applyZoom(currentZoom);
 
-                // Definir as imagens em Base64 recebidas do backend
-                document.getElementById('img-top-left').style.backgroundImage = `url(${data.urls.top_left})`;
-                document.getElementById('img-timeline').style.backgroundImage = `url(${data.urls.timeline})`;
-                document.getElementById('img-sidebar').style.backgroundImage = `url(${data.urls.sidebar})`;
-                document.getElementById('img-gantt-core').style.backgroundImage = `url(${data.urls.gantt_core})`;
-                
                 // Ocultar carregamento e mostrar visualizador
                 document.getElementById('loading-card').style.display = 'none';
                 document.getElementById('viewer-section').style.display = 'block';
@@ -261,7 +356,6 @@
         } catch (error) {
             console.error(error);
             showToast(error.message || "Erro ao conectar com o servidor.", "error");
-            // Voltar para a tela de upload em caso de erro
             document.getElementById('loading-card').style.display = 'none';
             document.getElementById('upload-card').style.display = 'block';
         }
@@ -273,7 +367,6 @@
         document.getElementById('upload-card').style.display = 'block';
     }
 
-    // Gerenciador de Zoom inteligente
     function aplicarDimensões(widthTotal, heightTotal, xCut, yCut) {
         const root = document.documentElement;
         root.style.setProperty('--col-width', xCut + 'px');
@@ -295,9 +388,9 @@
         document.getElementById('zoom-val').textContent = Math.round(currentZoom * 100) + '%';
     }
 
+    // Zoom limits
     function alterarZoom(delta) {
         let newZoom = currentZoom + delta;
-        // Limitar zoom entre 30% e 300%
         if (newZoom < 0.3) newZoom = 0.3;
         if (newZoom > 3.0) newZoom = 3.0;
         applyZoom(newZoom);
@@ -307,9 +400,7 @@
         applyZoom(1.0);
     }
 
-    // Alternar tela cheia para o visualizador
     function toggleFullscreen() {
-        const wrapper = document.getElementById('wrapper');
         if (!document.fullscreenElement) {
             wrapper.requestFullscreen().catch(err => {
                 showToast(`Erro ao ativar tela cheia: ${err.message}`, "error");
