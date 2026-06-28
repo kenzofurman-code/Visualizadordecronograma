@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GanttFlow Viewer - Visualizador de Cronogramas PDF</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-container">
+    <header class="app-header">
+        <div class="logo-container">
+            <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <h1>GanttFlow <span>Viewer</span></h1>
+        </div>
+        <p class="tagline">Visualize cronogramas complexos com rolagem inteligente e interativa</p>
+    </header>
+
+    <!-- Seção de Upload -->
+    <div class="card upload-card" id="upload-card">
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-content">
+                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <h3>Arraste seu cronograma PDF aqui</h3>
+                <p>ou clique para selecionar do computador</p>
+                <span class="file-format-info">Apenas arquivos PDF são aceitos</span>
+            </div>
+            <input type="file" id="pdf-input" accept="application/pdf" style="display: none;">
+        </div>
+        
+        <div class="file-info-bar" id="file-info-bar" style="display: none;">
+            <div class="file-details">
+                <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="file-name" id="selected-file-name">nome_do_arquivo.pdf</span>
+                <span class="file-size" id="selected-file-size">0 KB</span>
+            </div>
+            <button class="btn btn-secondary" onclick="limparSelecao()">Remover</button>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-primary" id="btn-processar" onclick="enviarCronograma()" disabled>
+                <span>Processar Cronograma</span>
+                <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Seção de Carregamento -->
+    <div class="card loading-card" id="loading-card" style="display: none;">
+        <div class="spinner-container">
+            <div class="glow-spinner"></div>
+        </div>
+        <h3>Processando Cronograma</h3>
+        <p>Convertendo PDF e segmentando as seções do gráfico de Gantt em alta resolução...</p>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Visualizador do Cronograma -->
+    <div class="viewer-section" id="viewer-section" style="display: none;">
+        <div class="control-panel">
+            <div class="control-group">
+                <button class="btn btn-secondary btn-icon" onclick="voltarParaUpload()" title="Carregar outro PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Voltar</span>
+                </button>
+                <div class="file-badge">
+                    <span class="file-badge-text" id="active-filename">cronograma.pdf</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="zoom-controls">
+                    <button class="btn-zoom" onclick="alterarZoom(-0.1)" title="Zoom Out">-</button>
+                    <span class="zoom-value" id="zoom-val">100%</span>
+                    <button class="btn-zoom" onclick="alterarZoom(0.1)" title="Zoom In">+</button>
+                    <button class="btn-zoom" onclick="resetarZoom()" title="Resetar Zoom">100%</button>
+                </div>
+                <button class="btn btn-secondary btn-icon" onclick="toggleFullscreen()" title="Tela Cheia">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="cronograma-wrapper" id="wrapper">
+            <div class="cronograma-canvas" id="canvas">
+                <div class="q-top-left" id="img-top-left"></div>
+                <div class="q-timeline"><div class="q-timeline-img" id="img-timeline"></div></div>
+                <div class="q-sidebar"><div class="q-sidebar-img" id="img-sidebar"></div></div>
+                <div class="q-gantt-core" id="img-gantt-core"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const fileInput = document.getElementById('pdf-input');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInfoBar = document.getElementById('file-info-bar');
+    const selectedFileName = document.getElementById('selected-file-name');
+    const selectedFileSize = document.getElementById('selected-file-size');
+    const btnProcessar = document.getElementById('btn-processar');
+    
+    let originalDimensoes = null;
+    let currentZoom = 1.0;
+
+    // Gerenciador de eventos do Drag & Drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('highlight'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('highlight'), false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    }
+
+    function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+            showToast("Apenas arquivos PDF são aceitos.", "error");
+            limparSelecao();
+            return;
+        }
+
+        selectedFileName.textContent = file.name;
+        selectedFileSize.textContent = formatBytes(file.size);
+        
+        fileInfoBar.style.display = 'flex';
+        dropZone.style.display = 'none';
+        btnProcessar.removeAttribute('disabled');
+    }
+
+    function limparSelecao() {
+        fileInput.value = '';
+        fileInfoBar.style.display = 'none';
+        dropZone.style.display = 'flex';
+        btnProcessar.setAttribute('disabled', 'true');
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function showToast(message, type = "error") {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 4000);
+    }
+
+    async function enviarCronograma() {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Exibir tela de carregamento
+        document.getElementById('upload-card').style.display = 'none';
+        document.getElementById('loading-card').style.display = 'flex';
+
+        try {
+            // Requisição com caminho relativo para funcionar em qualquer plataforma (ex: Vercel)
+            const response = await fetch('/api/upload-cronograma', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || "Erro no processamento do PDF.");
+            }
+
+            const data = await response.json();
+            
+            if (data.sucesso) {
+                originalDimensoes = data.dimensoes;
+                currentZoom = 1.0;
+                
+                document.getElementById('active-filename').textContent = file.name;
+                
+                // Aplicar as dimensões nos estilos CSS
+                applyZoom(currentZoom);
+
+                // Definir as imagens em Base64 recebidas do backend
+                document.getElementById('img-top-left').style.backgroundImage = `url(${data.urls.top_left})`;
+                document.getElementById('img-timeline').style.backgroundImage = `url(${data.urls.timeline})`;
+                document.getElementById('img-sidebar').style.backgroundImage = `url(${data.urls.sidebar})`;
+                document.getElementById('img-gantt-core').style.backgroundImage = `url(${data.urls.gantt_core})`;
+                
+                // Ocultar carregamento e mostrar visualizador
+                document.getElementById('loading-card').style.display = 'none';
+                document.getElementById('viewer-section').style.display = 'block';
+            } else {
+                throw new Error("Erro desconhecido ao processar o cronograma.");
+            }
+        } catch (error) {
+            console.error(error);
+            showToast(error.message || "Erro ao conectar com o servidor.", "error");
+            // Voltar para a tela de upload em caso de erro
+            document.getElementById('loading-card').style.display = 'none';
+            document.getElementById('upload-card').style.display = 'block';
+        }
+    }
+
+    function voltarParaUpload() {
+        limparSelecao();
+        document.getElementById('viewer-section').style.display = 'none';
+        document.getElementById('upload-card').style.display = 'block';
+    }
+
+    // Gerenciador de Zoom inteligente
+    function aplicarDimensões(widthTotal, heightTotal, xCut, yCut) {
+        const root = document.documentElement;
+        root.style.setProperty('--col-width', xCut + 'px');
+        root.style.setProperty('--row-height', yCut + 'px');
+        root.style.setProperty('--canvas-width', widthTotal + 'px');
+        root.style.setProperty('--canvas-height', heightTotal + 'px');
+    }
+
+    function applyZoom(zoom) {
+        if (!originalDimensoes) return;
+        
+        currentZoom = zoom;
+        const scaledWidth = originalDimensoes.largura_total * currentZoom;
+        const scaledHeight = originalDimensoes.altura_total * currentZoom;
+        const scaledX = originalDimensoes.x_cut * currentZoom;
+        const scaledY = originalDimensoes.y_cut * currentZoom;
+
+        aplicarDimensões(scaledWidth, scaledHeight, scaledX, scaledY);
+        document.getElementById('zoom-val').textContent = Math.round(currentZoom * 100) + '%';
+    }
+
+    function alterarZoom(delta) {
+        let newZoom = currentZoom + delta;
+        // Limitar zoom entre 30% e 300%
+        if (newZoom < 0.3) newZoom = 0.3;
+        if (newZoom > 3.0) newZoom = 3.0;
+        applyZoom(newZoom);
+    }
+
+    function resetarZoom() {
+        applyZoom(1.0);
+    }
+
+    // Alternar tela cheia para o visualizador
+    function toggleFullscreen() {
+        const wrapper = document.getElementById('wrapper');
+        if (!document.fullscreenElement) {
+            wrapper.requestFullscreen().catch(err => {
+                showToast(`Erro ao ativar tela cheia: ${err.message}`, "error");
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+</script>
+</body>
+</html>
