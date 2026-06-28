@@ -41,20 +41,37 @@ async def upload_cronograma(file: UploadFile = File(...)):
         largura, altura = img.size
         
         # Algoritmo de Varredura para achar o fim da lista de tarefas (X)
+        # Começamos a escanear a partir de 2% da largura para ignorar margens esquerdas
+        start_x = int(largura * 0.02)
+        end_x = int(largura * 0.20)
         x_cut = int(largura * 0.06)
-        for x in range(0, int(largura * 0.20)):
+        for x in range(start_x, end_x):
             r, g, b = img.getpixel((x, int(altura * 0.2)))
             if r > 240 and g > 240 and b > 240:
                 x_cut = x
                 break
+        
+        # Garantir limites mínimos e máximos de segurança para x_cut
+        x_cut = max(x_cut, int(largura * 0.03), 100)
+        x_cut = min(x_cut, int(largura * 0.25))
                 
         # Algoritmo de Varredura para achar o fim da régua de datas (Y)
+        # Começamos a escanear a partir de 1% da altura para ignorar margens superiores
+        start_y = int(altura * 0.01)
+        end_y = int(altura * 0.10)
         y_cut = int(altura * 0.035)
-        for y in range(0, int(altura * 0.10)):
+        for y in range(start_y, end_y):
+            # Escaneia um pouco à frente da barra lateral
             r, g, b = img.getpixel((x_cut + 50, y))
             if r > 250 and g > 250 and b > 250:
                 y_cut = y
                 break
+                
+        # Garantir limites mínimos e máximos de segurança para y_cut
+        y_cut = max(y_cut, int(altura * 0.015), 50)
+        y_cut = min(y_cut, int(altura * 0.15))
+        
+        print(f"[DEBUG] Dimensões do PDF: {largura}x{altura} | x_cut: {x_cut} | y_cut: {y_cut}")
         
         quadrantes = {
             "top_left": (0, 0, x_cut, y_cut),
