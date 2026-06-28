@@ -164,6 +164,43 @@
         boxSidebar.scrollTop = boxGanttCore.scrollTop;
     });
 
+    // Função PAN (Arrastar com o mouse para rolar o cronograma)
+    let isPanning = false;
+    let startX, startY;
+    let startScrollLeft, startScrollTop;
+
+    boxGanttCore.addEventListener('mousedown', (e) => {
+        // Panning apenas com clique esquerdo
+        if (e.button !== 0) return;
+        // Evitar que o navegador selecione imagens/textos ao arrastar
+        e.preventDefault();
+        
+        isPanning = true;
+        boxGanttCore.classList.add('panning');
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        startScrollLeft = boxGanttCore.scrollLeft;
+        startScrollTop = boxGanttCore.scrollTop;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        boxGanttCore.scrollLeft = startScrollLeft - dx;
+        boxGanttCore.scrollTop = startScrollTop - dy;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            boxGanttCore.classList.remove('panning');
+        }
+    });
+
     // Gerenciamento de Resizing dos divisores
     const resizerV = document.getElementById('resizer-v');
     const resizerH = document.getElementById('resizer-h');

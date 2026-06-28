@@ -581,6 +581,12 @@ body.resizing-h, body.resizing-h * {
     z-index: 10;
     overflow: auto; /* Permite rolagem nos eixos X e Y */
     background-color: #111520;
+    cursor: grab;
+}
+
+.box-gantt-core.panning {
+    cursor: grabbing !important;
+    user-select: none;
 }
 
 /* Customização da Barra de Rolagem da box-gantt-core */
