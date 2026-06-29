@@ -87,11 +87,15 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 line_text = "".join([span.get("text", "") for span in line.get("spans", [])]).strip()
                 bbox = line.get("bbox")  # (x0, y0, x1, y1) em pontos PDF
                 
-                # Converter de MediaBox para CropBox (área visual da página que foi renderizada)
-                x0_visible = bbox[0] - page.rect.x0
-                y0_visible = bbox[1] - page.rect.y0
-                x1_visible = bbox[2] - page.rect.x0
-                y1_visible = bbox[3] - page.rect.y0
+                # Converter de MediaBox para CropBox usando a matriz de rotação da página,
+                # garantindo que as coordenadas do texto acompanhem a rotação visual (ex: rotação de 90 graus).
+                rect_unrotated = fitz.Rect(bbox)
+                rect_rotated = rect_unrotated * page.rotation_matrix
+                
+                x0_visible = rect_rotated.x0
+                y0_visible = rect_rotated.y0
+                x1_visible = rect_rotated.x1
+                y1_visible = rect_rotated.y1
                 
                 # Filtrar:
                 # 1. Deve começar na metade esquerda da página
