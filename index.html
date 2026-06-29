@@ -631,6 +631,16 @@
         sidebarContainer.querySelectorAll('.hover-overlay').forEach(el => el.remove());
         ganttContainer.querySelectorAll('.hover-overlay').forEach(el => el.remove());
         
+        // Gerar dinamicamente hoverZones contendo TODOS os textos extraídos do PDF
+        hoverZones = extractedLines.map(line => {
+            const pkg = configuredPackages.find(p => p.text === line.text);
+            return {
+                texto: line.text,
+                box: line.box,
+                detalhes: pkg ? pkg.details : null
+            };
+        });
+        
         hoverZones.forEach(zone => {
             const [x0, y0, x1, y1] = zone.box;
             
@@ -648,9 +658,14 @@
             overlay.addEventListener('mouseenter', (e) => {
                 const tooltip = document.getElementById('gantt-tooltip');
                 const textoPacote = zone.texto;
-                const detalhes = zone.detalhes.map(d => `• ${d}`).join('\n');
                 
-                tooltip.innerHTML = `<strong>${textoPacote}</strong>\n<span style="color: var(--accent); font-size: 0.72rem; text-transform: uppercase; font-weight: 700; display: block; margin-top: 6px; margin-bottom: 4px; letter-spacing: 0.5px;">Pacote contém:</span>${detalhes}`;
+                if (zone.detalhes && zone.detalhes.length > 0) {
+                    const detalhes = zone.detalhes.map(d => `• ${d}`).join('\n');
+                    tooltip.innerHTML = `<strong>${textoPacote}</strong>\n<span style="color: var(--accent); font-size: 0.72rem; text-transform: uppercase; font-weight: 700; display: block; margin-top: 6px; margin-bottom: 4px; letter-spacing: 0.5px;">Pacote contém:</span>${detalhes}`;
+                } else {
+                    tooltip.innerHTML = `<strong>${textoPacote}</strong>\n<span style="color: var(--text-secondary); font-size: 0.72rem; display: block; margin-top: 4px;">Passe o mouse ou configure este pacote para adicionar detalhes.</span>`;
+                }
+                
                 tooltip.style.display = 'block';
                 positionTooltip(e, tooltip);
             });
@@ -787,16 +802,10 @@
     }
 
     function confirmarEVisualizar() {
-        hoverZones = configuredPackages.map(pkg => {
-            return {
-                texto: pkg.text,
-                box: pkg.box,
-                detalhes: pkg.details
-            };
-        });
-        
         document.getElementById('config-card').style.display = 'none';
         document.getElementById('viewer-section').style.display = 'block';
+        
+        applyZoom(currentZoom);
         
         applyZoom(currentZoom);
     }
