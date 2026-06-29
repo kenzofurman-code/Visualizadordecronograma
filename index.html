@@ -82,6 +82,54 @@
         </div>
     </div>
 
+    <!-- Tela Intermediária: Configurar Pacotes -->
+    <div class="card config-card" id="config-card" style="display: none;">
+        <h2>Configurar Detalhes dos Pacotes</h2>
+        <p class="subtitle">Adicione os serviços e itens que aparecerão no tooltip ao passar o mouse sobre cada texto do cronograma.</p>
+        
+        <div class="config-layout">
+            <!-- Coluna 1: Formulário de Adicionar -->
+            <div class="config-form-section">
+                <div class="form-group">
+                    <label for="package-text-select">Selecione o Texto do PDF (Ex: Portas):</label>
+                    <select id="package-text-select">
+                        <option value="">Selecione um texto...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="package-items">Itens do Tooltip (um por linha):</label>
+                    <textarea id="package-items" placeholder="Instalação de portas&#10;Instalação de vistas&#10;Instalação de rodapés" rows="5"></textarea>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-add-package" onclick="adicionarPacoteManual()" style="width: fit-content; align-self: flex-start;">
+                    <span>Adicionar Pacote</span>
+                </button>
+            </div>
+            
+            <!-- Coluna 2: Lista de Pacotes Ativos -->
+            <div class="config-list-section">
+                <h4>Pacotes Configurados</h4>
+                <div class="packages-list" id="packages-list">
+                    <p class="empty-list-msg">Nenhum pacote configurado para este cronograma.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="config-actions">
+            <button class="btn btn-secondary" onclick="voltarParaUpload()">
+                <span>Voltar</span>
+            </button>
+            <button class="btn btn-primary btn-icon" onclick="confirmarEVisualizar()">
+                <span>Visualizar Cronograma</span>
+                <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     <!-- Visualizador do Cronograma -->
     <div class="viewer-section" id="viewer-section" style="display: none;">
         <div class="control-panel">
@@ -161,6 +209,8 @@
     let originalDimensoes = null;
     let currentZoom = 1.0;
     let hoverZones = [];
+    let extractedLines = [];
+    let configuredPackages = [];
 
     // Sincronização de Scroll entre as Caixas
     boxGanttCore.addEventListener('scroll', () => {
@@ -387,9 +437,28 @@
             if (data.sucesso) {
                 originalDimensoes = data.dimensoes;
                 currentZoom = 1.0;
-                hoverZones = data.hover_zones || [];
+                extractedLines = data.extracted_lines || [];
                 
                 document.getElementById('active-filename').textContent = file.name;
+                
+                // Preencher o seletor da tela intermediária
+                const selectText = document.getElementById('package-text-select');
+                selectText.innerHTML = '<option value="">Selecione um texto...</option>';
+                extractedLines.forEach((line, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.textContent = line.text;
+                    selectText.appendChild(opt);
+                });
+                
+                // Carregar pacotes salvos no localStorage (se existirem)
+                const saved = localStorage.getItem('gantt_packages_' + file.name);
+                if (saved) {
+                    configuredPackages = JSON.parse(saved);
+                } else {
+                    configuredPackages = [];
+                }
+                atualizarListaPacotes();
                 
                 // Definir a imagem única nos elementos img
                 document.getElementById('img-top-left').src = data.full_image;
@@ -403,12 +472,9 @@
                 boxTimeline.scrollLeft = 0;
                 boxSidebar.scrollTop = 0;
                 
-                // Aplicar as dimensões nos estilos CSS
-                applyZoom(currentZoom);
-
-                // Ocultar carregamento e mostrar visualizador
+                // Ocultar carregamento e mostrar tela de configuração
                 document.getElementById('loading-card').style.display = 'none';
-                document.getElementById('viewer-section').style.display = 'block';
+                document.getElementById('config-card').style.display = 'block';
             } else {
                 throw new Error("Erro desconhecido ao processar o cronograma.");
             }
@@ -423,6 +489,7 @@
     function voltarParaUpload() {
         limparSelecao();
         document.getElementById('viewer-section').style.display = 'none';
+        document.getElementById('config-card').style.display = 'none';
         document.getElementById('upload-card').style.display = 'block';
     }
 
@@ -506,6 +573,112 @@
         
         tooltip.style.left = x + 'px';
         tooltip.style.top = y + 'px';
+    }
+
+    // Lógica para Configuração Manual dos Pacotes (Tela Intermediária)
+    function adicionarPacoteManual() {
+        const selectText = document.getElementById('package-text-select');
+        const textValue = selectText.value;
+        const textareaItems = document.getElementById('package-items');
+        
+        if (textValue === "") {
+            showToast("Selecione um texto do cronograma.", "error");
+            return;
+        }
+        
+        const selectedLine = extractedLines[parseInt(textValue)];
+        const items = textareaItems.value.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+            
+        if (items.length === 0) {
+            showToast("Digite pelo menos um item para o tooltip.", "error");
+            return;
+        }
+        
+        // Verificar se esse texto já está configurado
+        const existingIndex = configuredPackages.findIndex(pkg => pkg.text === selectedLine.text);
+        if (existingIndex !== -1) {
+            configuredPackages[existingIndex].details = items;
+        } else {
+            configuredPackages.push({
+                text: selectedLine.text,
+                box: selectedLine.box,
+                details: items
+            });
+        }
+        
+        // Salvar no localStorage
+        const fileName = fileInput.files[0].name;
+        localStorage.setItem('gantt_packages_' + fileName, JSON.stringify(configuredPackages));
+        
+        textareaItems.value = "";
+        selectText.value = "";
+        atualizarListaPacotes();
+        showToast("Pacote adicionado com sucesso!", "success");
+    }
+
+    function removerPacote(index) {
+        configuredPackages.splice(index, 1);
+        
+        const fileName = fileInput.files[0].name;
+        localStorage.setItem('gantt_packages_' + fileName, JSON.stringify(configuredPackages));
+        
+        atualizarListaPacotes();
+        showToast("Pacote removido.", "success");
+    }
+
+    function atualizarListaPacotes() {
+        const listDiv = document.getElementById('packages-list');
+        if (configuredPackages.length === 0) {
+            listDiv.innerHTML = '<p class="empty-list-msg">Nenhum pacote configurado para este cronograma.</p>';
+            return;
+        }
+        
+        listDiv.innerHTML = "";
+        configuredPackages.forEach((pkg, index) => {
+            const row = document.createElement('div');
+            row.className = 'package-item-row';
+            
+            const info = document.createElement('div');
+            info.className = 'package-item-info';
+            
+            const title = document.createElement('div');
+            title.className = 'package-item-title';
+            title.textContent = pkg.text;
+            
+            const details = document.createElement('div');
+            details.className = 'package-item-details';
+            details.textContent = pkg.details.join(', ');
+            
+            info.appendChild(title);
+            info.appendChild(details);
+            
+            const btnRemove = document.createElement('button');
+            btnRemove.className = 'btn-remove-package';
+            btnRemove.textContent = 'Excluir';
+            btnRemove.onclick = () => removerPacote(index);
+            
+            row.appendChild(info);
+            row.appendChild(btnRemove);
+            
+            listDiv.appendChild(row);
+        });
+    }
+
+    function confirmarEVisualizar() {
+        hoverZones = configuredPackages.map(pkg => {
+            return {
+                texto: pkg.text,
+                box: pkg.box,
+                detalhes: pkg.details
+            };
+        });
+        
+        document.getElementById('config-card').style.display = 'none';
+        document.getElementById('viewer-section').style.display = 'block';
+        
+        applyZoom(currentZoom);
     }
 
     // Zoom limits

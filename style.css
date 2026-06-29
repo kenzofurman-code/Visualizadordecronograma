@@ -677,6 +677,161 @@ body.resizing-h, body.resizing-h * {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Tela Intermediária de Configuração */
+.config-card {
+    max-width: 900px;
+    width: 90%;
+    margin: 20px auto;
+}
+
+.config-card h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #FFF 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.config-card .subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.config-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .config-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+.config-form-section, .config-list-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.config-form-section .form-group {
+    margin-bottom: 20px;
+}
+
+.config-form-section label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.config-form-section select, .config-form-section textarea {
+    width: 100%;
+    background: rgba(22, 27, 38, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.config-form-section select:focus, .config-form-section textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+    outline: none;
+}
+
+.config-list-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.packages-list {
+    background: rgba(22, 27, 38, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    flex-grow: 1;
+    min-height: 220px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.empty-list-msg {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 60px;
+    text-align: center;
+}
+
+.package-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.package-item-row:hover {
+    border-color: rgba(6, 182, 212, 0.4);
+    background: rgba(6, 182, 212, 0.05);
+}
+
+.package-item-info {
+    text-align: left;
+}
+
+.package-item-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.package-item-details {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.btn-remove-package {
+    background: transparent;
+    border: none;
+    color: var(--error);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-remove-package:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.config-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
 /* Notificações Toast */
 .toast {
     position: fixed;

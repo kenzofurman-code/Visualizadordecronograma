@@ -77,9 +77,8 @@ async def upload_cronograma(file: UploadFile = File(...)):
         text_dict = page.get_text("dict")
         x_cut_points = x_cut / zoom
         
-        tasks = []
+        extracted_lines = []
         for block in text_dict.get("blocks", []):
-            # Apenas blocos de texto
             if block.get("type") != 0:
                 continue
             for line in block.get("lines", []):
@@ -88,44 +87,24 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 
                 # Se tiver texto e estiver no lado esquerdo do divisor
                 if line_text and bbox[0] < x_cut_points:
-                    tasks.append({
+                    box_pixels = [
+                        int(bbox[0] * zoom),
+                        int(bbox[1] * zoom),
+                        int(bbox[2] * zoom),
+                        int(bbox[3] * zoom)
+                    ]
+                    extracted_lines.append({
                         "text": line_text,
-                        "x0": bbox[0],
-                        "y0": bbox[1],
-                        "x1": bbox[2],
-                        "y1": bbox[3],
-                        "children": []
+                        "box": box_pixels,
+                        "y0": bbox[1] # Para ordenação
                     })
         
-        # Ordenar as tarefas de cima para baixo
-        tasks.sort(key=lambda t: t["y0"])
+        # Ordenar as linhas de cima para baixo
+        extracted_lines.sort(key=lambda t: t["y0"])
         
-        # Determinar hierarquia com base no recuo (x0)
-        for i in range(len(tasks)):
-            parent = tasks[i]
-            for j in range(i + 1, len(tasks)):
-                child = tasks[j]
-                # Se encontrarmos uma tarefa com recuo menor ou igual, paramos o escopo do pai
-                if child["x0"] <= parent["x0"] + 2:
-                    break
-                parent["children"].append(child["text"])
-        
-        # Formatar hover zones
-        hover_zones = []
-        for t in tasks:
-            if len(t["children"]) > 0:
-                # Converter coordenadas de pontos do PDF para pixels (com o zoom de 300 DPI)
-                box_pixels = [
-                    int(t["x0"] * zoom),
-                    int(t["y0"] * zoom),
-                    int(t["x1"] * zoom),
-                    int(t["y1"] * zoom)
-                ]
-                hover_zones.append({
-                    "texto": t["text"],
-                    "box": box_pixels,
-                    "detalhes": t["children"]
-                })
+        # Remover a chave temporária y0 de cada dicionário
+        for line in extracted_lines:
+            line.pop("y0", None)
         
         # Salvar a imagem inteira do PDF em buffer na memória e codificar em Base64
         buffered = io.BytesIO()
@@ -144,7 +123,7 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 "y_cut": y_cut
             },
             "full_image": full_image_url,
-            "hover_zones": hover_zones
+            "extracted_lines": extracted_lines
         })
         
     except Exception as e:
