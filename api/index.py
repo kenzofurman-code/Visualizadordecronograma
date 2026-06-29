@@ -87,25 +87,31 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 line_text = "".join([span.get("text", "") for span in line.get("spans", [])]).strip()
                 bbox = line.get("bbox")  # (x0, y0, x1, y1) em pontos PDF
                 
+                # Converter de MediaBox para CropBox (área visual da página que foi renderizada)
+                x0_visible = bbox[0] - page.rect.x0
+                y0_visible = bbox[1] - page.rect.y0
+                x1_visible = bbox[2] - page.rect.x0
+                y1_visible = bbox[3] - page.rect.y0
+                
                 # Filtrar:
                 # 1. Deve começar na metade esquerda da página
                 # 2. Deve ter pelo menos 3 caracteres (ignorando espaços)
                 # 3. Deve conter pelo menos uma letra (ignorar datas e números puros)
-                if line_text and bbox[0] < limite_x_points:
+                if line_text and x0_visible < limite_x_points:
                     cleaned_text = line_text.replace(" ", "")
                     has_letter = any(c.isalpha() for c in line_text)
                     
                     if len(cleaned_text) >= 3 and has_letter:
                         box_pixels = [
-                            int(bbox[0] * zoom),
-                            int(bbox[1] * zoom),
-                            int(bbox[2] * zoom),
-                            int(bbox[3] * zoom)
+                            int(x0_visible * zoom),
+                            int(y0_visible * zoom),
+                            int(x1_visible * zoom),
+                            int(y1_visible * zoom)
                         ]
                         extracted_lines.append({
                             "text": line_text,
                             "box": box_pixels,
-                            "y0": bbox[1] # Para ordenação
+                            "y0": y0_visible # Para ordenação
                         })
         
         # Ordenar as linhas de cima para baixo

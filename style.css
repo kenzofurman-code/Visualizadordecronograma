@@ -609,8 +609,8 @@ body.resizing-h, body.resizing-h * {
 
 /* Imagens do Gantt */
 .gantt-img {
-    width: var(--canvas-width);
-    height: var(--canvas-height);
+    width: var(--canvas-width) !important;
+    height: var(--canvas-height) !important;
     display: block;
     max-width: none !important;
     position: relative;
