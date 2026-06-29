@@ -527,13 +527,16 @@
         hoverZones.forEach(zone => {
             const [x0, y0, x1, y1] = zone.box;
             
+            const paddingX = 6;
+            const paddingY = 3;
+            
             const overlay = document.createElement('div');
             overlay.className = 'hover-overlay';
             
-            overlay.style.left = (x0 * currentZoom) + 'px';
-            overlay.style.top = (y0 * currentZoom) + 'px';
-            overlay.style.width = ((x1 - x0) * currentZoom) + 'px';
-            overlay.style.height = ((y1 - y0) * currentZoom) + 'px';
+            overlay.style.left = ((x0 - paddingX) * currentZoom) + 'px';
+            overlay.style.top = ((y0 - paddingY) * currentZoom) + 'px';
+            overlay.style.width = (((x1 - x0) + paddingX * 2) * currentZoom) + 'px';
+            overlay.style.height = (((y1 - y0) + paddingY * 2) * currentZoom) + 'px';
             
             overlay.addEventListener('mouseenter', (e) => {
                 const tooltip = document.getElementById('gantt-tooltip');
