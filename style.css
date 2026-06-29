@@ -633,9 +633,17 @@ body.resizing-h, body.resizing-h * {
     margin-top: 0;
 }
 
-#img-gantt-core {
+.gantt-canvas {
+    position: relative;
+    width: var(--canvas-width);
+    height: var(--canvas-height);
     margin-left: calc(-1 * var(--col-width));
     margin-top: calc(-1 * var(--row-height));
+}
+
+#img-gantt-core {
+    margin-left: 0;
+    margin-top: 0;
 }
 
 /* Overlays interativos para tooltips - agora visíveis por padrão como marcadores */
@@ -910,4 +918,133 @@ body.resizing-h, body.resizing-h * {
     .control-group {
         justify-content: space-between;
     }
+}
+
+/* Dashboard e Seletor de Obras */
+.dashboard-card {
+    max-width: 900px;
+    width: 90%;
+    margin: 20px auto;
+}
+
+.dashboard-card h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #FFF 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.new-obra-inline {
+    display: flex;
+    align-items: center;
+    background: rgba(22, 27, 38, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.obras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.obra-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.obra-card:hover {
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.05);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.1);
+}
+
+.obra-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.obra-crono-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.obra-crono-info svg {
+    width: 14px;
+    height: 14px;
+    color: var(--accent);
+}
+
+.obra-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 10px;
+}
+
+.obra-actions .btn {
+    flex-grow: 1;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn-delete-obra {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--error);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    transition: all 0.2s;
+}
+
+.btn-delete-obra:hover {
+    background: var(--error);
+    color: #FFF;
+    border-color: var(--error);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.btn-delete-obra svg {
+    width: 16px;
+    height: 16px;
+}
+
+.empty-dashboard-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
 }
