@@ -126,7 +126,9 @@
             
             <!-- Caixa 3: Sidebar (Sincroniza verticalmente) -->
             <div class="box-sidebar" id="box-sidebar">
-                <img class="gantt-img" id="img-sidebar" src="" alt="">
+                <div class="sidebar-canvas" id="sidebar-canvas">
+                    <img class="gantt-img" id="img-sidebar" src="" alt="">
+                </div>
             </div>
             
             <!-- Caixa 4: Gantt Core (Rolador principal) -->
@@ -142,6 +144,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="gantt-tooltip" id="gantt-tooltip" style="display: none;"></div>
 
 <script>
     const fileInput = document.getElementById('pdf-input');
@@ -157,6 +160,7 @@
     
     let originalDimensoes = null;
     let currentZoom = 1.0;
+    let hoverZones = [];
 
     // Sincronização de Scroll entre as Caixas
     boxGanttCore.addEventListener('scroll', () => {
@@ -383,6 +387,7 @@
             if (data.sucesso) {
                 originalDimensoes = data.dimensoes;
                 currentZoom = 1.0;
+                hoverZones = data.hover_zones || [];
                 
                 document.getElementById('active-filename').textContent = file.name;
                 
@@ -440,6 +445,67 @@
 
         aplicarDimensões(scaledWidth, scaledHeight, scaledX, scaledY);
         document.getElementById('zoom-val').textContent = Math.round(currentZoom * 100) + '%';
+        
+        renderHoverZones();
+    }
+
+    function renderHoverZones() {
+        const container = document.getElementById('sidebar-canvas');
+        if (!container) return;
+        
+        // Remover overlays anteriores
+        const oldOverlays = container.querySelectorAll('.hover-overlay');
+        oldOverlays.forEach(el => el.remove());
+        
+        hoverZones.forEach(zone => {
+            const [x0, y0, x1, y1] = zone.box;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'hover-overlay';
+            
+            overlay.style.left = (x0 * currentZoom) + 'px';
+            overlay.style.top = (y0 * currentZoom) + 'px';
+            overlay.style.width = ((x1 - x0) * currentZoom) + 'px';
+            overlay.style.height = ((y1 - y0) * currentZoom) + 'px';
+            
+            overlay.addEventListener('mouseenter', (e) => {
+                const tooltip = document.getElementById('gantt-tooltip');
+                const textoPacote = zone.texto;
+                const detalhes = zone.detalhes.map(d => `• ${d}`).join('\n');
+                
+                tooltip.innerHTML = `<strong>${textoPacote}</strong>\n<span style="color: var(--accent); font-size: 0.72rem; text-transform: uppercase; font-weight: 700; display: block; margin-top: 6px; margin-bottom: 4px; letter-spacing: 0.5px;">Pacote contém:</span>${detalhes}`;
+                tooltip.style.display = 'block';
+                positionTooltip(e, tooltip);
+            });
+            
+            overlay.addEventListener('mousemove', (e) => {
+                const tooltip = document.getElementById('gantt-tooltip');
+                positionTooltip(e, tooltip);
+            });
+            
+            overlay.addEventListener('mouseleave', () => {
+                const tooltip = document.getElementById('gantt-tooltip');
+                tooltip.style.display = 'none';
+            });
+            
+            container.appendChild(overlay);
+        });
+    }
+
+    function positionTooltip(e, tooltip) {
+        const tooltipRect = tooltip.getBoundingClientRect();
+        let x = e.clientX + 15;
+        let y = e.clientY + 15;
+        
+        if (x + tooltipRect.width > window.innerWidth) {
+            x = e.clientX - tooltipRect.width - 15;
+        }
+        if (y + tooltipRect.height > window.innerHeight) {
+            y = e.clientY - tooltipRect.height - 15;
+        }
+        
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
     }
 
     // Zoom limits
