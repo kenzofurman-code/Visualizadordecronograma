@@ -680,10 +680,8 @@
                 tooltip.style.display = 'none';
             });
             
-            // Decidir se anexa ao sidebar (esquerda) ou gantt core (direita/principal)
-            if (x0 < originalDimensoes.x_cut) {
-                sidebarContainer.appendChild(overlay);
-            } else {
+            // Só renderizar overlays na área principal (corpo/Gantt core), ignorando a barra lateral esquerda
+            if (x0 >= originalDimensoes.x_cut) {
                 ganttContainer.appendChild(overlay);
             }
         });

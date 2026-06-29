@@ -98,11 +98,15 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 # Filtrar:
                 # 1. Deve ter pelo menos 3 caracteres (ignorando espaços)
                 # 2. Deve conter pelo menos uma letra (ignorar datas e números puros)
+                # 3. Não deve ser um intervalo de datas (ex: "15/5 à 29/5" ou "15/5 a 29/5")
                 if line_text:
                     cleaned_text = line_text.replace(" ", "")
                     has_letter = any(c.isalpha() for c in line_text)
                     
-                    if len(cleaned_text) >= 3 and has_letter:
+                    # Regex para identificar intervalos de datas como "15/5 à 29/5", "30/11 a 25/2", "06/01 até 19/01"
+                    is_date_range = re.search(r'\d{1,2}/\d{1,2}(?:/\d{2,4})?\s*(?:à|a|até|ate|-)\s*\d{1,2}/\d{1,2}(?:/\d{2,4})?', line_text, re.IGNORECASE)
+                    
+                    if len(cleaned_text) >= 3 and has_letter and not is_date_range:
                         box_pixels = [
                             int(x0_visible * zoom),
                             int(y0_visible * zoom),
