@@ -100,6 +100,8 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 # 1. Deve ter pelo menos 3 caracteres (ignorando espaços)
                 # 2. Deve conter pelo menos uma letra (ignorar datas e números puros)
                 # 3. Não deve ser um intervalo de datas (ex: "15/5 à 29/5" ou "15/5 a 29/5")
+                # 4. Deve iniciar com um caractere alfanumérico (bloquear símbolos como . , : ; etc.)
+                # 5. Deve estar no corpo principal (abaixo do cabeçalho de datas e à direita da barra lateral de tarefas)
                 if line_text:
                     cleaned_text = line_text.replace(" ", "")
                     has_letter = any(c.isalpha() for c in line_text)
@@ -107,18 +109,20 @@ async def upload_cronograma(file: UploadFile = File(...)):
                     # Regex para identificar intervalos de datas como "15/5 à 29/5", "30/11 a 25/2", "06/01 até 19/01"
                     is_date_range = re.search(r'\d{1,2}/\d{1,2}(?:/\d{2,4})?\s*(?:à|a|até|ate|-)\s*\d{1,2}/\d{1,2}(?:/\d{2,4})?', line_text, re.IGNORECASE)
                     
-                    if len(cleaned_text) >= 3 and has_letter and not is_date_range:
-                        box_pixels = [
-                            int(x0_visible * zoom),
-                            int(y0_visible * zoom),
-                            int(x1_visible * zoom),
-                            int(y1_visible * zoom)
-                        ]
-                        extracted_lines.append({
-                            "text": line_text,
-                            "box": box_pixels,
-                            "y0": y0_visible # Para ordenação
-                        })
+                    if len(cleaned_text) >= 3 and has_letter and not is_date_range and line_text[0].isalnum():
+                        x0_px = int(x0_visible * zoom)
+                        y0_px = int(y0_visible * zoom)
+                        x1_px = int(x1_visible * zoom)
+                        y1_px = int(y1_visible * zoom)
+                        
+                        # Filtrar geograficamente para a área amarela (direita e abaixo das linhas de corte)
+                        if x0_px >= x_cut and y0_px >= y_cut:
+                            box_pixels = [x0_px, y0_px, x1_px, y1_px]
+                            extracted_lines.append({
+                                "text": line_text,
+                                "box": box_pixels,
+                                "y0": y0_visible # Para ordenação
+                            })
         
         # Ordenar as linhas de cima para baixo
         extracted_lines.sort(key=lambda t: t["y0"])
