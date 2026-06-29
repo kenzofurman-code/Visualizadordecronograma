@@ -75,7 +75,9 @@ async def upload_cronograma(file: UploadFile = File(...)):
         
         # Extrair dados de texto do PDF para gerar os hover zones (tooltips semânticos)
         text_dict = page.get_text("dict")
-        x_cut_points = x_cut / zoom
+        # Usar a metade esquerda da página (50% da largura total) para cobrir toda a barra lateral,
+        # prevenindo que tarefas identadas sejam cortadas do filtro.
+        limite_x_points = page.rect.width * 0.50
         
         extracted_lines = []
         for block in text_dict.get("blocks", []):
@@ -85,19 +87,26 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 line_text = "".join([span.get("text", "") for span in line.get("spans", [])]).strip()
                 bbox = line.get("bbox")  # (x0, y0, x1, y1) em pontos PDF
                 
-                # Se tiver texto e estiver no lado esquerdo do divisor
-                if line_text and bbox[0] < x_cut_points:
-                    box_pixels = [
-                        int(bbox[0] * zoom),
-                        int(bbox[1] * zoom),
-                        int(bbox[2] * zoom),
-                        int(bbox[3] * zoom)
-                    ]
-                    extracted_lines.append({
-                        "text": line_text,
-                        "box": box_pixels,
-                        "y0": bbox[1] # Para ordenação
-                    })
+                # Filtrar:
+                # 1. Deve começar na metade esquerda da página
+                # 2. Deve ter pelo menos 3 caracteres (ignorando espaços)
+                # 3. Deve conter pelo menos uma letra (ignorar datas e números puros)
+                if line_text and bbox[0] < limite_x_points:
+                    cleaned_text = line_text.replace(" ", "")
+                    has_letter = any(c.isalpha() for c in line_text)
+                    
+                    if len(cleaned_text) >= 3 and has_letter:
+                        box_pixels = [
+                            int(bbox[0] * zoom),
+                            int(bbox[1] * zoom),
+                            int(bbox[2] * zoom),
+                            int(bbox[3] * zoom)
+                        ]
+                        extracted_lines.append({
+                            "text": line_text,
+                            "box": box_pixels,
+                            "y0": bbox[1] # Para ordenação
+                        })
         
         # Ordenar as linhas de cima para baixo
         extracted_lines.sort(key=lambda t: t["y0"])

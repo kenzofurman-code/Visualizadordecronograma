@@ -613,6 +613,8 @@ body.resizing-h, body.resizing-h * {
     height: var(--canvas-height);
     display: block;
     max-width: none !important;
+    position: relative;
+    z-index: 1;
 }
 
 /* Margens de deslocamento interno para simular recortes */
@@ -644,7 +646,8 @@ body.resizing-h, body.resizing-h * {
     background: rgba(6, 182, 212, 0.04);
     border-radius: 4px;
     transition: all 0.2s ease;
-    z-index: 45;
+    z-index: 9999 !important; /* Muito acima da imagem sibling */
+    pointer-events: auto !important;
 }
 
 /* Pequeno marcador quadrado pulsante no lado esquerdo do texto */
