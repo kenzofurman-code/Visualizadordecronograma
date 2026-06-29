@@ -558,10 +558,12 @@
                 const selectText = document.getElementById('package-text-select');
                 selectText.innerHTML = '<option value="">Selecione um texto...</option>';
                 extractedLines.forEach((line, index) => {
-                    const opt = document.createElement('option');
-                    opt.value = index;
-                    opt.textContent = line.text;
-                    selectText.appendChild(opt);
+                    if (line.box[0] >= originalDimensoes.x_cut) {
+                        const opt = document.createElement('option');
+                        opt.value = index;
+                        opt.textContent = line.text;
+                        selectText.appendChild(opt);
+                    }
                 });
                 
                 atualizarListaPacotes();
@@ -989,10 +991,12 @@
             const selectText = document.getElementById('package-text-select');
             selectText.innerHTML = '<option value="">Selecione um texto...</option>';
             extractedLines.forEach((line, index) => {
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = line.text;
-                selectText.appendChild(opt);
+                if (line.box[0] >= originalDimensoes.x_cut) {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.textContent = line.text;
+                    selectText.appendChild(opt);
+                }
             });
 
             atualizarListaPacotes();
