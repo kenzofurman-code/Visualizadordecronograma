@@ -77,8 +77,6 @@ async def upload_cronograma(file: UploadFile = File(...)):
         text_dict = page.get_text("dict")
         # Usar a metade esquerda da página (50% da largura total) para cobrir toda a barra lateral,
         # prevenindo que tarefas identadas sejam cortadas do filtro.
-        limite_x_points = page.rect.width * 0.50
-        
         extracted_lines = []
         for block in text_dict.get("blocks", []):
             if block.get("type") != 0:
@@ -98,10 +96,9 @@ async def upload_cronograma(file: UploadFile = File(...)):
                 y1_visible = rect_rotated.y1
                 
                 # Filtrar:
-                # 1. Deve começar na metade esquerda da página
-                # 2. Deve ter pelo menos 3 caracteres (ignorando espaços)
-                # 3. Deve conter pelo menos uma letra (ignorar datas e números puros)
-                if line_text and x0_visible < limite_x_points:
+                # 1. Deve ter pelo menos 3 caracteres (ignorando espaços)
+                # 2. Deve conter pelo menos uma letra (ignorar datas e números puros)
+                if line_text:
                     cleaned_text = line_text.replace(" ", "")
                     has_letter = any(c.isalpha() for c in line_text)
                     
